@@ -16,29 +16,29 @@ def train_model():
         'eval_metric': 'mae',
         'silent': 1
     }
-    watchlist = [(xgboost_train_df, 'train'), (xgboost_valid_df, 'valid')]
-    return xgb.train(params, xgboost_train_df, 10000, watchlist,
+    watchlist = [(xgboost_X_train, 'train'), (xgboost_X_holdout, 'holdout')]
+    return xgb.train(params, xgboost_X_train, 10000, watchlist,
                      early_stopping_rounds=100, verbose_eval=10)
 
 
 if __name__ == "__main__":
-    # read data.
-    train_df = cu.read_training_data()
-    properties_df = cu.read_properties_data()
-    test_df = cu.read_test_data()
-    properties_df = cu.encode_data(properties_df)
-    # combine data with properties.
-    train_properties_df = cu.get_train_properties_df(train_df, properties_df)
-    test_properties_df = cu.get_test_properties_df(test_df, properties_df)
-    # get train, valid and test data for model.
-    train_x, train_y, valid_x, valid_y =\
-        cu.get_model_train_valid_data(train_properties_df)
-    xgboost_train_df = xgb.DMatrix(train_x, label=train_y)
-    xgboost_valid_df = xgb.DMatrix(valid_x, label=valid_y)
-    xgboost_test_df = xgb.DMatrix(test_properties_df[train_x.columns])
-    # predict result.
+    # read train data.
+    X, y = cu.get_train_data()
+
+    # get CV from train data.
+    X_train, y_train, X_holdout, y_holdout = cu.get_cv(X, y)
+
+    # train model.
+    xgboost_X_train = xgb.DMatrix(X_train, label=y_train)
+    xgboost_X_holdout = xgb.DMatrix(X_holdout, label=y_holdout)
     xgboost_model = train_model()
-    test_predict = xgboost_model.predict(xgboost_test_df)
+
+    # read and prepare test data.
+    T = cu.get_test_data()
+    xgboost_T = xgb.DMatrix(T[X_train.columns])
+
+    # predict result.
+    y_pred = xgboost_model.predict(xgboost_T)
+
     # write result.
-    result_df = cu.predict_test(test_predict)
-    cu.write_result(result_df)
+    cu.write_result(y_pred)

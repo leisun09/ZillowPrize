@@ -1,83 +1,70 @@
 # Common utils shared by different models.
 from sklearn.preprocessing import LabelEncoder
-import pandas as pd
+import data_utils as du
+import numpy as np
 
 FOLD_NUM = 10
 
-TRAINING_DATA_FILE = "../../data/train_2016_v2.csv"
-PROPERTIES_FILE = "../../data/properties_2016.csv"
-TEST_DATA_FILE = "../../data/sample_submission.csv"
 RESULT_FILE = "../../data/result.csv"
 
 
-def read_training_data():
-    print('Reading training data.')
-    return pd.read_csv(TRAINING_DATA_FILE)
-
-
-def read_properties_data():
-    print('Reading properties data.')
-    return pd.read_csv(PROPERTIES_FILE)
-
-
-def read_test_data():
-    print('Reading test data.')
-    return pd.read_csv(TEST_DATA_FILE)
-
-
-def encode_data(properties_df):
+def encode_data(df):
     print('Encoding missing data.')
-    for column in properties_df.columns:
-        if properties_df[column].dtype == 'object':
-            properties_df[column].fillna(-1, inplace=True)
+    for column in df.columns:
+        if df[column].dtype == 'object':
+            df[column].fillna(-1, inplace=True)
             label_encoder = LabelEncoder()
-            list_value = list(properties_df[column].values)
+            list_value = list(df[column].values)
             label_encoder.fit(list_value)
-            properties_df[column] = label_encoder.transform(list_value)
-    return properties_df
+            df[column] = label_encoder.transform(list_value)
+    return df
 
 
-def get_train_properties_df(train_df, properties_df):
-    print('Combining training with properties data.')
-    return train_df.merge(properties_df, how='left', on='parcelid')
+def get_train_data():
+    print('Getting train data.')
+    train = encode_data(du.get_completed_train_data())
+    X = train.drop(['parcelid', 'logerror', 'transactiondate'], axis=1)
+    y = train['logerror'].values
+    return X, y
 
 
-def get_model_train_valid_data(train_properties_df):
-    print('Creating training and validation data.')
+def get_test_data():
+    print('Getting test data.')
+    return encode_data(du.get_completed_test_data())
+
+
+def get_one_kfold(length, split_index):
     train_index = []
     valid_index = []
-    for i in xrange(len(train_properties_df)):
-        if i % FOLD_NUM != 0:
-            train_index.append(i)
-        else:
+    for i in xrange(length):
+        if i % FOLD_NUM == split_index:
             valid_index.append(i)
-    train_dataset = train_properties_df.iloc[train_index]
-    valid_dataset = train_properties_df.iloc[valid_index]
-    # create train and valid data.
-    train_x = train_dataset.drop(
-        ['parcelid', 'logerror', 'transactiondate'], axis=1)
-    train_y = train_dataset['logerror'].values
-    valid_x = valid_dataset.drop(
-        ['parcelid', 'logerror', 'transactiondate'], axis=1)
-    valid_y = valid_dataset['logerror'].values
-    return train_x, train_y, valid_x, valid_y
+        else:
+            train_index.append(i)
+    return train_index, valid_index
 
 
-def get_test_properties_df(test_df, properties_df):
-    print('Combining test with properties data.')
-    test_df['parcelid'] = test_df['ParcelId']
-    return test_df.merge(properties_df, how='left', on='parcelid')
+def get_full_kfold(length):
+    full_list = []
+    for i in xrange(FOLD_NUM):
+        full_list.append(np.array(get_one_kfold(length, i)))
+    return full_list
 
 
-def predict_test(test_predict):
-    print('Predicting on test data.')
-    tmp_df = read_test_data()
-    for column in tmp_df.columns[tmp_df.columns != 'ParcelId']:
-        tmp_df[column] = test_predict
-    return tmp_df
+def get_cv(X, y):
+    print('Creating train and holdout data.')
+    train_idx, holdout_idx = get_one_kfold(len(X), 0)
+    x_train = X.iloc[train_idx]
+    y_train = y[train_idx]
+    x_holdout = X.iloc[holdout_idx]
+    y_holdout = y[holdout_idx]
+    return x_train, y_train, x_holdout, y_holdout
 
 
-def write_result(result_df):
+def write_result(y_pred):
     print('Writing to csv.')
+    result_df = du.get_test_data()
+    for column in result_df.columns[result_df.columns != 'ParcelId']:
+        result_df[column] = y_pred
     result_df.to_csv(RESULT_FILE, index=False, float_format='%.4f')
     print('Congratulation!')
