@@ -30,21 +30,23 @@ def train_model():
 
 if __name__ == "__main__":
     # read train data.
-    X, y = cu.get_train_data()
+    X, y = cu.get_train_data(encode_non_object=False)
 
     # get CV from train data.
     X_train, y_train, X_holdout, y_holdout = cu.get_cv(X, y)
 
     # train model.
+    print('Training model.')
     lgbm_X_train = lgbm.Dataset(X_train, label=y_train)
     lgbm_X_holdout = lgbm.Dataset(X_holdout, label=y_holdout)
     lgbm_model = train_model()
 
     # read and prepare test data.
-    T = cu.get_test_data()
+    T = cu.get_test_data(encode_non_object=False)
     lgbm_T = T[X_train.columns]
 
     # predict result.
+    print('Predicting.')
     y_pred = lgbm_model.predict(lgbm_T)
 
     # write result.

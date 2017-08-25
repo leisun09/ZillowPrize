@@ -8,7 +8,7 @@ FOLD_NUM = 10
 RESULT_FILE = "../../data/result.csv"
 
 
-def encode_data(df):
+def encode_data(df, encode_non_object):
     print('Encoding missing data.')
     for column in df.columns:
         if df[column].dtype == 'object':
@@ -17,20 +17,22 @@ def encode_data(df):
             list_value = list(df[column].values)
             label_encoder.fit(list_value)
             df[column] = label_encoder.transform(list_value)
+        elif encode_non_object:
+            df[column].fillna(-1, inplace=True)
     return df
 
 
-def get_train_data():
+def get_train_data(encode_non_object):
     print('Getting train data.')
-    train = encode_data(du.get_completed_train_data())
+    train = du.get_completed_train_data(encode_non_object)
     X = train.drop(['parcelid', 'logerror', 'transactiondate'], axis=1)
     y = train['logerror'].values
     return X, y
 
 
-def get_test_data():
+def get_test_data(encode_non_object):
     print('Getting test data.')
-    return encode_data(du.get_completed_test_data())
+    return du.get_completed_test_data(encode_non_object)
 
 
 def get_one_kfold(length, split_index):

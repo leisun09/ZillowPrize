@@ -23,21 +23,23 @@ def train_model():
 
 if __name__ == "__main__":
     # read train data.
-    X, y = cu.get_train_data()
+    X, y = cu.get_train_data(encode_non_object=False)
 
     # get CV from train data.
     X_train, y_train, X_holdout, y_holdout = cu.get_cv(X, y)
 
     # train model.
+    print('Training model.')
     xgboost_X_train = xgb.DMatrix(X_train, label=y_train)
     xgboost_X_holdout = xgb.DMatrix(X_holdout, label=y_holdout)
     xgboost_model = train_model()
 
     # read and prepare test data.
-    T = cu.get_test_data()
+    T = cu.get_test_data(encode_non_object=False)
     xgboost_T = xgb.DMatrix(T[X_train.columns])
 
     # predict result.
+    print('Predicting.')
     y_pred = xgboost_model.predict(xgboost_T)
 
     # write result.
