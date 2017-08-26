@@ -36,14 +36,14 @@ def get_test_data(encode_non_object):
 
 
 def get_one_kfold(length, split_index):
-    train_index = []
-    valid_index = []
+    train_idx = []
+    holdout_idx = []
     for i in xrange(length):
         if i % FOLD_NUM == split_index:
-            valid_index.append(i)
+            holdout_idx.append(i)
         else:
-            train_index.append(i)
-    return train_index, valid_index
+            train_idx.append(i)
+    return train_idx, holdout_idx
 
 
 def get_full_kfold(length):
