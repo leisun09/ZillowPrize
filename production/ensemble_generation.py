@@ -4,9 +4,9 @@
 # Attention: KFold is fixed now for developing. It will be changed to random
 # mode before the final submission.
 #
-# Linear Regression: 0.0649116
-# XGBoost          : 0.1000357
-# LightGBM         : 0.0653411
+# Linear Regression: 0.0648982
+# XGBoost          : 0.0645830
+# LightGBM         : 0.0647254
 from linear_regression_baseline import LinearRegressionModel
 from xgboost_baseline import XGBoostModel
 from lightgbm_baseline import LightGBMModel

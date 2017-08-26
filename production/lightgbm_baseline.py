@@ -1,7 +1,7 @@
 # LightGBM baseline for feature engineering.
 #
-# Training result: [719] train's mae: 0.0675899 valid's mae: 0.0644243
-# Public score: 0.0647060
+# Training result: [1355] train's l1: 0.0517065 holdout's l1: 0.0525932
+# Public score: 0.0646075
 import common_utils as cu
 import lightgbm as lgbm
 
@@ -29,7 +29,7 @@ class LightGBMModel(object):
         lgbm_X_train = lgbm.Dataset(X_train, label=y_train)
         lgbm_X_holdout = lgbm.Dataset(X_holdout, label=y_holdout)
         self.base_model = lgbm.train(
-            params, lgbm_X_train, num_boost_round=1000,
+            params, lgbm_X_train, num_boost_round=10000,
             valid_sets=[lgbm_X_train, lgbm_X_holdout],
             valid_names=['train', 'holdout'], early_stopping_rounds=100,
             verbose_eval=10)

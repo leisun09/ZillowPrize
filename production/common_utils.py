@@ -4,6 +4,8 @@ import data_utils as du
 import numpy as np
 
 FOLD_NUM = 10
+OUTLIER_UPPER_BOUND = 0.419
+OUTLIER_LOWER_BOUND = -0.4
 
 RESULT_FILE = "../../data/result.csv"
 
@@ -25,7 +27,11 @@ def encode_data(df, encode_non_object):
 def get_train_data(encode_non_object):
     print('Getting train data.')
     train = du.get_completed_train_data(encode_non_object)
-    X = train.drop(['parcelid', 'logerror', 'transactiondate'], axis=1)
+    train = train[train.logerror > OUTLIER_LOWER_BOUND]
+    train = train[train.logerror < OUTLIER_UPPER_BOUND]
+    X = train.drop(['parcelid', 'logerror', 'transactiondate',
+                    'propertyzoningdesc', 'propertycountylandusecode',
+                    'fireplacecnt', 'fireplaceflag'], axis=1)
     y = train['logerror'].values
     return X, y
 
