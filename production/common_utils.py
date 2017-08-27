@@ -3,7 +3,8 @@ from sklearn.preprocessing import LabelEncoder
 import data_utils as du
 import numpy as np
 
-FOLD_NUM = 10
+FOLD_NUM = 5
+TRAIN_SPLIT_LINE = 80172
 OUTLIER_UPPER_BOUND = 0.419
 OUTLIER_LOWER_BOUND = -0.4
 
@@ -42,9 +43,9 @@ def get_test_data(encode_non_object):
 
 
 def get_one_kfold(length, split_index):
-    train_idx = []
+    train_idx = range(TRAIN_SPLIT_LINE)
     holdout_idx = []
-    for i in xrange(length):
+    for i in xrange(TRAIN_SPLIT_LINE, length):
         if i % FOLD_NUM == split_index:
             holdout_idx.append(i)
         else:

@@ -7,10 +7,10 @@
 # Linear Regression: 0.0648982
 # XGBoost          : 0.0645830
 # LightGBM         : 0.0647254
+# Final            : 0.0646989
 from linear_regression_baseline import LinearRegressionModel
 from xgboost_baseline import XGBoostModel
 from lightgbm_baseline import LightGBMModel
-from sklearn.linear_model import LinearRegression
 import common_utils as cu
 import numpy as np
 
@@ -26,10 +26,12 @@ class Ensemble(object):
         folds = cu.get_full_kfold(len(y))
         S_train = np.zeros((X.shape[0], len(self.base_models)))
         S_test = np.zeros((T.shape[0], len(self.base_models)))
+
         # run each model.
         for i, base_model in enumerate(self.base_models):
             print("Fitting for base model %d: %s" % (i, self.base_models))
             S_test_i = np.zeros((T.shape[0], len(folds)))
+
             # run each fold.
             for j, (train_idx, test_idx) in enumerate(folds):
                 print("Fitting for fold %d" % j)
@@ -41,11 +43,13 @@ class Ensemble(object):
                 y_pred = base_model.predict(X_holdout)
                 S_train[test_idx, i] = y_pred
                 S_test_i[:, j] = base_model.predict(T)
+
             # get mean of all folds.
             S_test[:, i] = S_test_i.mean(1)
+
         # second layer to fit the result from the first layer cross validation.
-        self.stacker.fit(S_train, y)
-        y_pred = self.stacker.predict(S_test)[:]
+        self.stacker.train(S_train, y, None, None)
+        y_pred = self.stacker.predict(S_test)
         return y_pred
 
 
@@ -66,7 +70,7 @@ def run():
     # setup ensemble parameters.
     ensemble = Ensemble(
         n_folds=10,
-        stacker=LinearRegression(),
+        stacker=LinearRegressionModel(),
         base_models=base_models
     )
 
