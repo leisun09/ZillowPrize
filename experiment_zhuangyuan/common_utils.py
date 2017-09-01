@@ -43,9 +43,9 @@ def get_test_data(encode_non_object):
 
 
 def get_one_kfold(length, split_index):
-    train_idx = range(TRAIN_SPLIT_LINE)
+    train_idx = list(range(TRAIN_SPLIT_LINE))
     holdout_idx = []
-    for i in xrange(TRAIN_SPLIT_LINE, length):
+    for i in range(TRAIN_SPLIT_LINE, length):
         if i % FOLD_NUM == split_index:
             holdout_idx.append(i)
         else:
@@ -55,7 +55,7 @@ def get_one_kfold(length, split_index):
 
 def get_full_kfold(length):
     full_list = []
-    for i in xrange(FOLD_NUM):
+    for i in range(FOLD_NUM):
         full_list.append(np.array(get_one_kfold(length, i)))
     return full_list
 
