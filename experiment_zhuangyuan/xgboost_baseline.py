@@ -73,12 +73,12 @@ def run():
     def getTransTest(X, propdic):
         X_trans = pd.DataFrame()
         for k in X.columns:
-            if not propdic.has_key(k):
+            if not k in propdic.keys():
                 X_trans[k] = X[k]
             else:
                 aseri = pd.cut(X[k], propdic[k]['bins'], include_lowest=True, labels=range(len(propdic[k]['bins'])-1))
                 X_trans[k] = [float(propdic[k]['mapdic'].get(x,0.01)) for x in aseri]
-                X_trans[k] = [float(x) for x in aseri]
+#                X_trans[k] = [float(x) for x in aseri]
         
         return X_trans
     
