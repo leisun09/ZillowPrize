@@ -34,6 +34,10 @@ def getBinQuan(aseri, bseri):
     for k in rdic.keys():
         rdic[k] = (100.0*avg + vnumdic[k]*rdic[k])/(100.0+vnumdic[k])
     
+    for k in rdic.keys():
+        if str(rdic[k]) == 'nan':
+            rdic[k] = avg
+            
     return rdic
 
 def getTransData(X, tarlist):
@@ -127,25 +131,34 @@ def neuroforcast():
 X, y = cu.get_train_data(encode_non_object=True)
 tarlist = X.columns#['longitude', 'yearbuilt', 'taxamount']
 X_trans,propdic = getTransData(X, tarlist)
-
+from keras import regularizers
 x_train, y_train, x_holdout, y_holdout = cu.get_cv(X_trans, y)
-
+num, acfunc = 10, 'softmax'
 model = Sequential([
-Dense(32, input_shape=(53,)),
-Activation('relu'),
+Dense(10, input_shape=(53,),\
+      kernel_regularizer=regularizers.l2(0.01), \
+      activity_regularizer=regularizers.l1(0.01)
+      ),
+Dense(5),
+Dense(5),
 Dense(1),
-Activation('linear'),
+Activation('linear')
 ])
-
+#0.052303568738
 # For a mean squared error regression problem
 model.compile(optimizer='rmsprop',
-              loss='mse')
+              loss='mae')
 
-model.fit(x_train.values, y_train, epochs=10, batch_size=32)
+y_train_trim = [max([min([0.1,v]),-0.1]) for v in y_train]
+y_train_trim = np.array(y_train_trim)
+model.fit(x_train.values, y_train_trim, epochs=5, batch_size=32)
 
 y_pred = model.predict(x_holdout.values)
+y_pred = y_pred[:,0]
 
-model.fit(X_trans.values, y, epochs=10, batch_size=32)
+score = abs(y_pred-y_holdout).mean()
+print(score)
+
 # read test data.
 T = cu.get_test_data(encode_non_object=True)
 T_trans = getTransTest(T, propdic)
@@ -155,3 +168,14 @@ y_pred = model.predict(T_trans[X_trans.columns].values)
 
 # write result.
 cu.write_result(y_pred)
+#tmpdf = getTransTest(T.iloc[-100:,:], propdic)
+#print(tmpdf.shape)
+#for c in tmpdf.columns:
+#    print(c)
+#    print(tmpdf[c].value_counts())
+#tmpy = model.predict(tmpdf[X_trans.columns].values)
+#print(tmpy)
+#print(tmpdf[X_trans.columns].values)
+#print(tmpdf.latitude)
+#print(T.iloc[-100:,:].latitude)
+#print(propdic['latitude'])
